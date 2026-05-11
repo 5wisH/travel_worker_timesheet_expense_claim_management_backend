@@ -2,8 +2,8 @@ package com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity;
 
 public class JwtRequest {
 
-    private String userName;
-    private String userPassword;
+    private String userName; //userName
+    private String userPassword; // userPassword
 
     public String getUserName() {
         return userName;

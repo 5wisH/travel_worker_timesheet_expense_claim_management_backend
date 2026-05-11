@@ -47,7 +47,7 @@ public class WebSecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/authenticate").permitAll()
+                        .requestMatchers("/authenticate", "/registerNewUser").permitAll()
                         // REMOVE THIS LINE: .requestMatchers(HttpHeaders.ALLOW).permitAll()
                         .anyRequest().authenticated()
                 )

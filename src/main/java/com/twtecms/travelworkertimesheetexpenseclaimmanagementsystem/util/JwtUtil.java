@@ -23,7 +23,7 @@ import static java.security.KeyRep.Type.SECRET;
 @Component
 public class JwtUtil {
 
-    private static final String SECRET = "yourSecretKeyHereMustBeAtLeast256BitsLong";
+    private static final String SECRET = "TravelWorkerTimesheetExpenseClaimManagementSystemSecretKeyForJwtTokenGeneration2026SecureKey";
 
     private static final int TOKEN_VALIDITY = 3600 * 5;
 
