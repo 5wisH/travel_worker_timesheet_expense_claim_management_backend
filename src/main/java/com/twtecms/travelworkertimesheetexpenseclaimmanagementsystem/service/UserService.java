@@ -77,12 +77,12 @@ public class UserService {
         }
 
         // Only create raj user if it doesn't exist
-        if (!userDao.existsByUserName("user123")) {
+        if (!userDao.existsByUserName("user")) {
             User user = new User();
-            user.setUserName("user@123");
-            user.setUserPassword(getEncodedPassword("raj@123"));
-            user.setUserFirstName("raj");
-            user.setUserLastName("sharma");
+            user.setUserName("user");
+            user.setUserPassword(getEncodedPassword("user@123"));
+            user.setUserFirstName("user");
+            user.setUserLastName("user");
             Set<Role> userRoles = new HashSet<>();
             userRoles.add(roleDao.findById("User").get());
             user.setRole(userRoles);
