@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.service.JwtService;
 @Configuration
 @EnableWebSecurity
@@ -47,8 +48,12 @@ public class WebSecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/claims/**").permitAll()
                         .requestMatchers("/authenticate", "/registerNewUser").permitAll()
+                        .requestMatchers(
+                                PathPatternRequestMatcher.pathPattern("/claims"),
+                                PathPatternRequestMatcher.pathPattern("/claims/**")
+                        ).permitAll()
+                        .requestMatchers("/finance/**").hasRole("Finance")
                         // REMOVE THIS LINE: .requestMatchers(HttpHeaders.ALLOW).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -26,72 +26,27 @@ public class UserService {
 
     @Transactional
     public void initRoleAndUser() {
+        createRoleIfMissing("Employee", "Employee role");
+        createRoleIfMissing("Supervisor", "Supervisor role");
+        createRoleIfMissing("Logistics", "Logistics role");
+        createRoleIfMissing("Finance", "Finance role");
+        createRoleIfMissing("HR Admin", "HR Admin role");
+        createRoleIfMissing("Admin", "Admin role");
+        createRoleIfMissing("Auditor", "Auditor role");
+        createRoleIfMissing("Senior Approver", "Senior Approver role");
 
-        // Only create Admin role if it doesn't exist
-        if (!roleDao.findById("Admin").isPresent()) {
-            Role adminRole = new Role();
-            adminRole.setRoleName("Admin");
-            adminRole.setRoleDescription("Admin role");
-            roleDao.save(adminRole);
-        }
-
-        if (!roleDao.findById("Manager").isPresent()) {
-            Role adminRole = new Role();
-            adminRole.setRoleName("Manager");
-            adminRole.setRoleDescription("Manager role");
-            roleDao.save(adminRole);
-        }
-
-        // Only create User role if it doesn't exist
-        if (!roleDao.findById("User").isPresent()) {
-            Role userRole = new Role();
-            userRole.setRoleName("User");
-            userRole.setRoleDescription("Default role for newly created record");
-            roleDao.save(userRole);
-        }
-
-        // Only create admin user if it doesn't exist
-        if (!userDao.existsByUserName("admin123")) {
-            User adminUser = new User();
-            adminUser.setUserName("admin123");
-            adminUser.setUserPassword(getEncodedPassword("admin@pass"));
-            adminUser.setUserFirstName("admin");
-            adminUser.setUserLastName("admin");
-            Set<Role> adminRoles = new HashSet<>();
-            adminRoles.add(roleDao.findById("Admin").get());
-            adminUser.setRole(adminRoles);
-            userDao.save(adminUser);
-        }
-
-        // Only create manager user if it doesn't exist
-        if (!userDao.existsByUserName("manager123")) {
-            User adminUser = new User();
-            adminUser.setUserName("manager123");
-            adminUser.setUserPassword(getEncodedPassword("manager@pass"));
-            adminUser.setUserFirstName("manager");
-            adminUser.setUserLastName("manager");
-            Set<Role> adminRoles = new HashSet<>();
-            adminRoles.add(roleDao.findById("Manager").get());
-            adminUser.setRole(adminRoles);
-            userDao.save(adminUser);
-        }
-
-        // Only create raj user if it doesn't exist
-        if (!userDao.existsByUserName("user")) {
-            User user = new User();
-            user.setUserName("user");
-            user.setUserPassword(getEncodedPassword("user@123"));
-            user.setUserFirstName("user");
-            user.setUserLastName("user");
-            Set<Role> userRoles = new HashSet<>();
-            userRoles.add(roleDao.findById("User").get());
-            user.setRole(userRoles);
-            userDao.save(user);
-        }
+        upsertSeedUser("employee123", "employee@pass", "Employee", "User", "employee@khokha.local", "Employee");
+        upsertSeedUser("supervisor123", "supervisor@pass", "Supervisor", "User", "supervisor@khokha.local", "Supervisor", "manager123");
+        upsertSeedUser("logistics123", "logistics@pass", "Logistics", "User", "logistics@khokha.local", "Logistics");
+        upsertSeedUser("finance123", "finance@pass", "Finance", "User", "finance@khokha.local", "Finance");
+        upsertSeedUser("hradmin123", "hradmin@pass", "HR", "Admin", "hradmin@khokha.local", "HR Admin");
+        upsertSeedUser("admin123", "admin@pass", "Admin", "User", "admin@khokha.local", "Admin");
+        upsertSeedUser("auditor123", "auditor@pass", "Auditor", "User", "auditor@khokha.local", "Auditor");
+        upsertSeedUser("seniorapprover123", "seniorapprover@pass", "Senior", "Approver", "seniorapprover@khokha.local", "Senior Approver");
     }
 
     public User registerNewUser(User user) {
-        Role role = roleDao.findById("User").get();
+        Role role = roleDao.findById("Employee").get();
         Set<Role> roleSet = new HashSet<>();
         roleSet.add(role);
         user.setRole(roleSet);
@@ -103,5 +58,50 @@ public class UserService {
     public String getEncodedPassword(String password) {
 
         return passwordEncoder.encode(password);
+    }
+
+    private void createRoleIfMissing(String roleName, String roleDescription) {
+        if (roleDao.findById(roleName).isPresent()) {
+            return;
+        }
+
+        Role role = new Role();
+        role.setRoleName(roleName);
+        role.setRoleDescription(roleDescription);
+        roleDao.save(role);
+    }
+
+    private void upsertSeedUser(String userName, String password, String firstName, String lastName, String email, String roleName, String... previousUserNames) {
+        User user = findExistingSeedUser(userName, previousUserNames);
+        if (user == null) {
+            user = new User();
+        }
+
+        user.setUserName(userName);
+        user.setUserPassword(getEncodedPassword(password));
+        user.setUserFirstName(firstName);
+        user.setUserLastName(lastName);
+        user.setUserEmail(email);
+        user.setStatus(true);
+        Set<Role> roles = new HashSet<>();
+        roles.add(roleDao.findById(roleName).get());
+        user.setRole(roles);
+        userDao.save(user);
+    }
+
+    private User findExistingSeedUser(String userName, String... previousUserNames) {
+        User user = userDao.findByUserName(userName);
+        if (user != null) {
+            return user;
+        }
+
+        for (String previousUserName : previousUserNames) {
+            user = userDao.findByUserName(previousUserName);
+            if (user != null) {
+                return user;
+            }
+        }
+
+        return null;
     }
 }

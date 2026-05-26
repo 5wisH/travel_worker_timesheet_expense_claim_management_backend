@@ -12,4 +12,6 @@ public interface ClaimImageDao extends JpaRepository<ClaimImage, Long> {
     List<ClaimImage> findByClaimId(Long claimId);
 
     Optional<ClaimImage> findByClaimIdAndImageId(Long claimId, Long imageId);
+
+    void deleteByClaimId(Long claimId);
 }

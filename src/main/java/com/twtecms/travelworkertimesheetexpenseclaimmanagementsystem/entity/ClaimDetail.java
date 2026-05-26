@@ -26,6 +26,8 @@ public class ClaimDetail {
     private String detailType;
     private String description;
     private Double kilometers;
+    private String vehicleType;
+    private Double engineSizeCc;
     private LocalTime receiptTime;
     private Double amount;
     private Double allowedAmount;
@@ -87,6 +89,22 @@ public class ClaimDetail {
 
     public void setKilometers(Double kilometers) {
         this.kilometers = kilometers;
+    }
+
+    public String getVehicleType() {
+        return vehicleType;
+    }
+
+    public void setVehicleType(String vehicleType) {
+        this.vehicleType = vehicleType;
+    }
+
+    public Double getEngineSizeCc() {
+        return engineSizeCc;
+    }
+
+    public void setEngineSizeCc(Double engineSizeCc) {
+        this.engineSizeCc = engineSizeCc;
     }
 
     public LocalTime getReceiptTime() {

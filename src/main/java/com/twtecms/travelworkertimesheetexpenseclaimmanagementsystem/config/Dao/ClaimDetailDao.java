@@ -12,4 +12,6 @@ public interface ClaimDetailDao extends JpaRepository<ClaimDetail, Long> {
     List<ClaimDetail> findByClaimId(Long claimId);
 
     Optional<ClaimDetail> findByClaimIdAndClaimDetailId(Long claimId, Long claimDetailId);
+
+    void deleteByClaimId(Long claimId);
 }

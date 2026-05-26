@@ -14,7 +14,7 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long claimId; // auto generate the Id of the claim
     private Long userId; // foreign key that links a claim to the user entity
-    private String claimReference; // unique 6 digit claim reference
+    private String claimReference; // unique 10 digit claim reference
     private Date claimDate;  // The date the the claim was issued by the employee
     private String categories; // selected claim categories, like Meals, Fuel, Parking
     @ElementCollection(fetch = FetchType.EAGER)
@@ -22,10 +22,22 @@ public class Claim {
     private String status; // claim status, for example Submitted, Approved, Rejected
     private Double total_amount; // the amount present for the claim
     private Long managerId;
+    private String claimDescription;
+    @Column(name = "claim_rank")
+    private String rank;
+    private String departureDate;
+    private String arrivalDateTime;
+    private Double dateNumberOfDays;
+    private String departureTime;
+    private String arrivalTime;
+    private Double timeNumberOfDays;
+    private Double numberOfHours;
     @Transient
     private String userName;
     @Transient
     private Long userSubmissionCount;
+    @Transient
+    private List<ClaimDetail> claimDetails = new ArrayList<>();
 
     public Long getClaimId() {
         return claimId;
@@ -99,6 +111,78 @@ public class Claim {
         this.managerId = managerId;
     }
 
+    public String getClaimDescription() {
+        return claimDescription;
+    }
+
+    public void setClaimDescription(String claimDescription) {
+        this.claimDescription = claimDescription;
+    }
+
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
+
+    public String getDepartureDate() {
+        return departureDate;
+    }
+
+    public void setDepartureDate(String departureDate) {
+        this.departureDate = departureDate;
+    }
+
+    public String getArrivalDateTime() {
+        return arrivalDateTime;
+    }
+
+    public void setArrivalDateTime(String arrivalDateTime) {
+        this.arrivalDateTime = arrivalDateTime;
+    }
+
+    public Double getDateNumberOfDays() {
+        return dateNumberOfDays;
+    }
+
+    public void setDateNumberOfDays(Double dateNumberOfDays) {
+        this.dateNumberOfDays = dateNumberOfDays;
+    }
+
+    public String getDepartureTime() {
+        return departureTime;
+    }
+
+    public void setDepartureTime(String departureTime) {
+        this.departureTime = departureTime;
+    }
+
+    public String getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public void setArrivalTime(String arrivalTime) {
+        this.arrivalTime = arrivalTime;
+    }
+
+    public Double getTimeNumberOfDays() {
+        return timeNumberOfDays;
+    }
+
+    public void setTimeNumberOfDays(Double timeNumberOfDays) {
+        this.timeNumberOfDays = timeNumberOfDays;
+    }
+
+    public Double getNumberOfHours() {
+        return numberOfHours;
+    }
+
+    public void setNumberOfHours(Double numberOfHours) {
+        this.numberOfHours = numberOfHours;
+    }
+
     public String getUserName() {
         return userName;
     }
@@ -114,4 +198,13 @@ public class Claim {
     public void setUserSubmissionCount(Long userSubmissionCount) {
         this.userSubmissionCount = userSubmissionCount;
     }
+
+    public List<ClaimDetail> getClaimDetails() {
+        return claimDetails;
+    }
+
+    public void setClaimDetails(List<ClaimDetail> claimDetails) {
+        this.claimDetails = claimDetails;
+    }
+
 }

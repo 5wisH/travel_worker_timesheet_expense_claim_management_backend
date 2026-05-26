@@ -5,9 +5,8 @@ import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.Clai
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimDetail;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimImage;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimImageResponse;
-import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ReceiptAnalysisResponse;
+import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.Payment;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.service.ClaimService;
-import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.service.OpenAiVisionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,22 +30,12 @@ public class ClaimController {
     @Autowired
     private ClaimService claimService;
 
-    @Autowired
-    private OpenAiVisionService openAiVisionService;
-
     @PostMapping({"/claims/save"})
     public Claim saveClaim(
             @RequestPart("claim") Claim claim,
             @RequestPart(value = "files", required = false) MultipartFile[] files,
-            @RequestPart(value = "details", required = false) String claimDetailsJson) {
+            @RequestParam(value = "details", required = false) String claimDetailsJson) {
         return claimService.saveClaim(claim, files, claimDetailsJson);
-    }
-
-    @PostMapping({"/claims/vision/analyze-receipt"})
-    public ReceiptAnalysisResponse analyzeReceipt(
-            @RequestPart("file") MultipartFile file,
-            @RequestPart(value = "category", required = false) String category) {
-        return openAiVisionService.analyzeReceipt(file, category);
     }
 
     @GetMapping({"/claims"})
@@ -76,6 +66,11 @@ public class ClaimController {
     @GetMapping({"/claims/{claimId}/calculate"})
     public ClaimCalculationResponse calculateClaimTotal(@PathVariable Long claimId) {
         return claimService.calculateClaimTotal(claimId);
+    }
+
+    @PostMapping({"/claims/{claimId}/pay"})
+    public Payment payClaim(@PathVariable Long claimId, @RequestBody Map<String, String> request) {
+        return claimService.payClaim(claimId, request.get("processedBy"));
     }
 
     @GetMapping({"/claims/{claimId}/details/{detailId}/receipt"})

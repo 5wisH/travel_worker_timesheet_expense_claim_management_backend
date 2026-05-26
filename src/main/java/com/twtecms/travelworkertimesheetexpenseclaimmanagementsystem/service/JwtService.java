@@ -35,10 +35,13 @@ public class JwtService implements UserDetailsService {
     private UserDao userDao;
 
     @Autowired
+    private UserSessionLogService userSessionLogService;
+
+    @Autowired
     @Lazy
     private AuthenticationManager authenticationManager;
 
-    public JwtResponse createJwtToken(JwtRequest jwtRequest) throws Exception {
+    public JwtResponse createJwtToken(JwtRequest jwtRequest, String ipAddress, String userAgent) throws Exception {
         String userName = jwtRequest.getUserName();
         String userPassword = jwtRequest.getUserPassword();
         authenticate(userName, userPassword);
@@ -48,6 +51,7 @@ public class JwtService implements UserDetailsService {
 
         // Find user by username for login purposes
         User user = userDao.findByUserName(userName);
+        userSessionLogService.logLogin(user, ipAddress, userAgent);
         return new JwtResponse(user, newGeneratedToken);
     }
 

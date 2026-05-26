@@ -5,20 +5,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.ClaimDetailDao;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.ClaimDao;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.ClaimImageDao;
+import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.PaymentDao;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.UserDao;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.Claim;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimCalculationResponse;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimDetail;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimImage;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.ClaimImageResponse;
+import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.Payment;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class ClaimService {
@@ -33,12 +39,13 @@ public class ClaimService {
     private ClaimDetailDao claimDetailDao;
 
     @Autowired
+    private PaymentDao paymentDao;
+
+    @Autowired
     private UserDao userDao;
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    private static final double DISTANCE_RATE_PER_KM = 5.00;
 
     public Claim saveClaim(Claim claim, MultipartFile[] files, String claimDetailsJson) {
         if (claim.getStatus() == null || claim.getStatus().isBlank() || "true".equalsIgnoreCase(claim.getStatus())) {
@@ -46,7 +53,7 @@ public class ClaimService {
         }
 
         if (claim.getClaimReference() == null || claim.getClaimReference().isBlank()) {
-            claim.setClaimReference(generateClaimReference(claim.getUserId()));
+            claim.setClaimReference(generateClaimReference(claim));
         }
 
         if (files != null) {
@@ -60,23 +67,40 @@ public class ClaimService {
         Claim savedClaim = claimDao.save(claim);
         saveClaimImages(savedClaim.getClaimId(), files);
         saveClaimDetails(savedClaim.getClaimId(), claimDetailsJson, files);
-        populateUserName(savedClaim);
+        hydrateClaim(savedClaim);
         return savedClaim;
     }
 
     public List<Claim> getClaims() {
         return claimDao.findAll()
                 .stream()
-                .peek(this::populateUserName)
+                .peek(this::hydrateClaim)
                 .toList();
     }
 
     public List<Claim> getClaimsByUserId(Long userId) {
         return claimDao.findByUserIdOrderByClaimDateDesc(userId)
                 .stream()
-                .peek(this::populateUserName)
+                .peek(this::hydrateClaim)
                 .peek(claim -> claim.setUserSubmissionCount(countClaimsByUserId(userId)))
                 .toList();
+    }
+
+    public Claim getClaimById(Long claimId) {
+        Claim claim = claimDao.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found with id: " + claimId));
+        hydrateClaim(claim);
+        return claim;
+    }
+
+    public Claim saveClaimRecord(Claim claim) {
+        Claim savedClaim = claimDao.save(claim);
+        hydrateClaim(savedClaim);
+        return savedClaim;
+    }
+
+    public void deleteClaim(Long claimId) {
+        claimDao.deleteById(claimId);
     }
 
     public long countClaimsByUserId(Long userId) {
@@ -88,7 +112,7 @@ public class ClaimService {
                 .orElseThrow(() -> new RuntimeException("Claim not found with id: " + claimId));
         claim.setStatus(status);
         Claim savedClaim = claimDao.save(claim);
-        populateUserName(savedClaim);
+        hydrateClaim(savedClaim);
         return savedClaim;
     }
 
@@ -116,13 +140,33 @@ public class ClaimService {
                 .orElseThrow(() -> new RuntimeException("Claim not found with id: " + claimId));
         List<ClaimDetail> details = getClaimDetails(claimId);
         double totalAmount = details.stream()
-                .map(ClaimDetail::getReimbursableAmount)
-                .filter(amount -> amount != null)
+                .map(this::getIncludedAmount)
                 .mapToDouble(Double::doubleValue)
                 .sum();
         claim.setTotal_amount(totalAmount);
         claimDao.save(claim);
-        return new ClaimCalculationResponse(claimId, claim.getClaimReference(), totalAmount, details);
+        return new ClaimCalculationResponse(claimId, claim.getClaimReference(), claim.getClaimDate(), totalAmount, details);
+    }
+
+    public Payment payClaim(Long claimId, String processedBy) {
+        Claim claim = claimDao.findById(claimId)
+                .orElseThrow(() -> new RuntimeException("Claim not found with id: " + claimId));
+        if (claim.getTotal_amount() == null || claim.getTotal_amount() <= 0) {
+            calculateClaimTotal(claimId);
+            claim = claimDao.findById(claimId)
+                    .orElseThrow(() -> new RuntimeException("Claim not found with id: " + claimId));
+        }
+
+        Payment payment = new Payment();
+        payment.setClaimId(claimId);
+        payment.setPaymentDate(new Date());
+        payment.setReference("PAY-" + (claim.getClaimReference() == null ? claimId : claim.getClaimReference()));
+        payment.setStatus(true);
+        payment.setProcessedBy(processedBy == null || processedBy.isBlank() ? "Manager" : processedBy);
+
+        claim.setStatus("Paid");
+        claimDao.save(claim);
+        return paymentDao.save(payment);
     }
 
     public ClaimDetail getClaimDetailReceipt(Long claimId, Long detailId) {
@@ -198,8 +242,13 @@ public class ClaimService {
         if ("Distance Travelled".equalsIgnoreCase(detail.getCategory())) {
             detail.setDetailType("Distance");
             double kilometers = detail.getKilometers() == null ? 0 : detail.getKilometers();
+            double rate = getDistanceRatePerKm(detail);
             detail.setAllowedAmount(null);
-            detail.setAmount(kilometers * DISTANCE_RATE_PER_KM);
+            if (rate > 0) {
+                detail.setAmount(kilometers * rate);
+            } else if (detail.getAmount() == null) {
+                detail.setAmount(0.0);
+            }
             detail.setReimbursableAmount(detail.getAmount());
             return;
         }
@@ -231,7 +280,95 @@ public class ClaimService {
         }
 
         double amount = detail.getAmount() == null ? 0 : detail.getAmount();
-        detail.setReimbursableAmount(Math.min(amount, detail.getAllowedAmount()));
+        detail.setReimbursableAmount(amount);
+    }
+
+    private Double getIncludedAmount(ClaimDetail detail) {
+        if (detail == null) {
+            return 0.0;
+        }
+
+        if ("Distance Travelled".equalsIgnoreCase(detail.getCategory())) {
+            double kilometers = detail.getKilometers() == null ? 0 : detail.getKilometers();
+            double rate = getDistanceRatePerKm(detail);
+            if (kilometers > 0 && rate > 0) {
+                return kilometers * rate;
+            }
+            if (detail.getReimbursableAmount() != null) {
+                return detail.getReimbursableAmount();
+            }
+            return detail.getAmount() == null ? 0.0 : detail.getAmount();
+        }
+
+        if ("Meals".equalsIgnoreCase(detail.getCategory())
+                || "Toll Fees".equalsIgnoreCase(detail.getCategory())
+                || "Other".equalsIgnoreCase(detail.getCategory())) {
+            return detail.getAmount() == null ? 0.0 : detail.getAmount();
+        }
+
+        return detail.getReimbursableAmount() == null ? 0.0 : detail.getReimbursableAmount();
+    }
+
+    private double getDistanceRatePerKm(ClaimDetail detail) {
+        double engineSize = detail.getEngineSizeCc() == null ? 0 : detail.getEngineSizeCc();
+        String vehicleType = detail.getVehicleType() == null ? "" : detail.getVehicleType().trim();
+
+        if (engineSize <= 0 || vehicleType.isBlank()) {
+            return 0.0;
+        }
+
+        if ("Diesel".equalsIgnoreCase(vehicleType)) {
+            return getDieselRatePerKm(engineSize);
+        }
+
+        return getPetrolRatePerKm(engineSize);
+    }
+
+    private double getPetrolRatePerKm(double engineSize) {
+        if (engineSize <= 1250) {
+            return 3.172;
+        }
+        if (engineSize <= 1550) {
+            return 3.992;
+        }
+        if (engineSize <= 1750) {
+            return 4.337;
+        }
+        if (engineSize <= 1950) {
+            return 4.999;
+        }
+        if (engineSize <= 2150) {
+            return 5.359;
+        }
+        if (engineSize <= 2500) {
+            return 6.068;
+        }
+        if (engineSize <= 3500) {
+            return 7.576;
+        }
+        return 8.952;
+    }
+
+    private double getDieselRatePerKm(double engineSize) {
+        if (engineSize <= 1250) {
+            return 3.197;
+        }
+        if (engineSize <= 1550) {
+            return 3.828;
+        }
+        if (engineSize <= 1750) {
+            return 4.248;
+        }
+        if (engineSize <= 1950) {
+            return 4.448;
+        }
+        if (engineSize <= 2150) {
+            return 5.196;
+        }
+        if (engineSize <= 2500) {
+            return 5.942;
+        }
+        return 7.375;
     }
 
     private void populateReceiptUrl(ClaimDetail detail) {
@@ -240,13 +377,28 @@ public class ClaimService {
         }
     }
 
-    private String generateClaimReference(Long userId) {
+    private String generateClaimReference(Claim claim) {
         String claimReference;
+        int secondOffset = 0;
         do {
-            claimReference = String.valueOf(ThreadLocalRandom.current().nextInt(100000, 1000000));
-        } while (userId != null && claimDao.existsByUserIdAndClaimReference(userId, claimReference));
+            claimReference = generateReference(claim.getClaimDate(), secondOffset++);
+        } while (claim.getUserId() != null && claimDao.existsByUserIdAndClaimReference(claim.getUserId(), claimReference));
 
         return claimReference;
+    }
+
+    private String generateReference(Date claimDate, int secondOffset) {
+        LocalDate referenceDate = claimDate == null
+                ? LocalDate.now()
+                : claimDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalTime referenceTime = LocalTime.now().plusSeconds(secondOffset);
+        return referenceDate.format(DateTimeFormatter.ofPattern("MMdd"))
+                + referenceTime.format(DateTimeFormatter.ofPattern("HHmmss"));
+    }
+
+    private void hydrateClaim(Claim claim) {
+        populateUserName(claim);
+        claim.setClaimDetails(getClaimDetails(claim.getClaimId()));
     }
 
     private void populateUserName(Claim claim) {
