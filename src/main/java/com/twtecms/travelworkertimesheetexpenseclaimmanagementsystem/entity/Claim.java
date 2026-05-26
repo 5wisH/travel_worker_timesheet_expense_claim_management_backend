@@ -16,6 +16,10 @@ public class Claim {
     private Long userId; // foreign key that links a claim to the user entity
     private String claimReference; // unique 10 digit claim reference
     private Date claimDate;  // The date the the claim was issued by the employee
+    private String capturedBy;
+    private Date dateCaptured;
+    private Double advanceTaken;
+    private Double amount;
     private String categories; // selected claim categories, like Meals, Fuel, Parking
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> claimImages = new ArrayList<>(); // uploaded supporting document names
@@ -32,6 +36,20 @@ public class Claim {
     private String arrivalTime;
     private Double timeNumberOfDays;
     private Double numberOfHours;
+    private String privateMotorClaimedBy;
+    private String privateMotorDepartmentOf;
+    private String privateMotorRank;
+    @Column(length = 1000)
+    private String privateMotorAddress;
+    private String privateMotorMonth;
+    private String privateMotorAccountClaimNo;
+    private String privateMotorHeadquarters;
+    private String privateMotorMakeAndModel;
+    private String privateMotorCategory;
+    private String privateMotorYearOfManufacture;
+    private String privateMotorVehicleType;
+    private String privateMotorRegistrationNumber;
+    private String privateMotorEngineSweptVolumeGroup;
     @Transient
     private String userName;
     @Transient
@@ -69,6 +87,38 @@ public class Claim {
 
     public void setClaimDate(Date claimDate) {
         this.claimDate = claimDate;
+    }
+
+    public String getCapturedBy() {
+        return capturedBy;
+    }
+
+    public void setCapturedBy(String capturedBy) {
+        this.capturedBy = capturedBy;
+    }
+
+    public Date getDateCaptured() {
+        return dateCaptured;
+    }
+
+    public void setDateCaptured(Date dateCaptured) {
+        this.dateCaptured = dateCaptured;
+    }
+
+    public Double getAdvanceTaken() {
+        return advanceTaken;
+    }
+
+    public void setAdvanceTaken(Double advanceTaken) {
+        this.advanceTaken = advanceTaken;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this.amount = amount;
     }
 
     public String getCategories() {
@@ -181,6 +231,110 @@ public class Claim {
 
     public void setNumberOfHours(Double numberOfHours) {
         this.numberOfHours = numberOfHours;
+    }
+
+    public String getPrivateMotorClaimedBy() {
+        return privateMotorClaimedBy;
+    }
+
+    public void setPrivateMotorClaimedBy(String privateMotorClaimedBy) {
+        this.privateMotorClaimedBy = privateMotorClaimedBy;
+    }
+
+    public String getPrivateMotorDepartmentOf() {
+        return privateMotorDepartmentOf;
+    }
+
+    public void setPrivateMotorDepartmentOf(String privateMotorDepartmentOf) {
+        this.privateMotorDepartmentOf = privateMotorDepartmentOf;
+    }
+
+    public String getPrivateMotorRank() {
+        return privateMotorRank;
+    }
+
+    public void setPrivateMotorRank(String privateMotorRank) {
+        this.privateMotorRank = privateMotorRank;
+    }
+
+    public String getPrivateMotorAddress() {
+        return privateMotorAddress;
+    }
+
+    public void setPrivateMotorAddress(String privateMotorAddress) {
+        this.privateMotorAddress = privateMotorAddress;
+    }
+
+    public String getPrivateMotorMonth() {
+        return privateMotorMonth;
+    }
+
+    public void setPrivateMotorMonth(String privateMotorMonth) {
+        this.privateMotorMonth = privateMotorMonth;
+    }
+
+    public String getPrivateMotorAccountClaimNo() {
+        return privateMotorAccountClaimNo;
+    }
+
+    public void setPrivateMotorAccountClaimNo(String privateMotorAccountClaimNo) {
+        this.privateMotorAccountClaimNo = privateMotorAccountClaimNo;
+    }
+
+    public String getPrivateMotorHeadquarters() {
+        return privateMotorHeadquarters;
+    }
+
+    public void setPrivateMotorHeadquarters(String privateMotorHeadquarters) {
+        this.privateMotorHeadquarters = privateMotorHeadquarters;
+    }
+
+    public String getPrivateMotorMakeAndModel() {
+        return privateMotorMakeAndModel;
+    }
+
+    public void setPrivateMotorMakeAndModel(String privateMotorMakeAndModel) {
+        this.privateMotorMakeAndModel = privateMotorMakeAndModel;
+    }
+
+    public String getPrivateMotorCategory() {
+        return privateMotorCategory;
+    }
+
+    public void setPrivateMotorCategory(String privateMotorCategory) {
+        this.privateMotorCategory = privateMotorCategory;
+    }
+
+    public String getPrivateMotorYearOfManufacture() {
+        return privateMotorYearOfManufacture;
+    }
+
+    public void setPrivateMotorYearOfManufacture(String privateMotorYearOfManufacture) {
+        this.privateMotorYearOfManufacture = privateMotorYearOfManufacture;
+    }
+
+    public String getPrivateMotorVehicleType() {
+        return privateMotorVehicleType;
+    }
+
+    public void setPrivateMotorVehicleType(String privateMotorVehicleType) {
+        this.privateMotorVehicleType = privateMotorVehicleType;
+    }
+
+    public String getPrivateMotorRegistrationNumber() {
+        return privateMotorRegistrationNumber;
+    }
+
+    public void setPrivateMotorRegistrationNumber(String privateMotorRegistrationNumber) {
+        this.privateMotorRegistrationNumber = privateMotorRegistrationNumber;
+    }
+
+    public String getPrivateMotorEngineSweptVolumeGroup() {
+        return privateMotorEngineSweptVolumeGroup;
+    }
+
+    public void setPrivateMotorEngineSweptVolumeGroup(String privateMotorEngineSweptVolumeGroup) {
+        this.privateMotorEngineSweptVolumeGroup = privateMotorEngineSweptVolumeGroup;
     }
 
     public String getUserName() {

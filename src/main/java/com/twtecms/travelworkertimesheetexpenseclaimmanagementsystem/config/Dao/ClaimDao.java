@@ -10,6 +10,8 @@ import java.util.List;
 public interface ClaimDao extends JpaRepository<Claim, Long> {
     boolean existsByUserIdAndClaimReference(Long userId, String claimReference);
 
+    List<Claim> findAllByOrderByDateCapturedDesc();
+
     List<Claim> findByUserIdOrderByClaimDateDesc(Long userId);
 
     long countByUserId(Long userId);

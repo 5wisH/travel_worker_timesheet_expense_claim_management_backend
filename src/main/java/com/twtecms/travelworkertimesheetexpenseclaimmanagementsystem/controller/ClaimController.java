@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +35,29 @@ public class ClaimController {
     public Claim saveClaim(
             @RequestPart("claim") Claim claim,
             @RequestPart(value = "files", required = false) MultipartFile[] files,
-            @RequestParam(value = "details", required = false) String claimDetailsJson) {
-        return claimService.saveClaim(claim, files, claimDetailsJson);
+            @RequestParam(value = "details", required = false) String claimDetailsJson,
+            @RequestParam(value = "documentMetadata", required = false) String documentMetadataJson) {
+        return claimService.saveClaim(claim, files, claimDetailsJson, documentMetadataJson);
+    }
+
+    @PostMapping({"/claims"})
+    public Claim createClaim(@RequestBody Claim claim) {
+        Date now = new Date();
+
+        if (claim.getClaimDate() == null) {
+            claim.setClaimDate(now);
+        }
+        if (claim.getDateCaptured() == null) {
+            claim.setDateCaptured(now);
+        }
+        if (claim.getStatus() == null || claim.getStatus().isBlank()) {
+            claim.setStatus("Submitted");
+        }
+        if (claim.getTotal_amount() == null) {
+            claim.setTotal_amount(claim.getAmount());
+        }
+
+        return claimService.saveClaimRecord(claim);
     }
 
     @GetMapping({"/claims"})

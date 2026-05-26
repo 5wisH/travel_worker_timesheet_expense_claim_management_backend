@@ -24,10 +24,24 @@ public class ClaimDetail {
     private Long claimId;
     private String category;
     private String detailType;
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
     private Double kilometers;
     private String vehicleType;
     private Double engineSizeCc;
+    private String journeyDate;
+    private String journeyReason;
+    private Double homeToDestinationKm;
+    private Double officeToDestinationKm;
+    private Double claimableKm;
+    private String departureFrom;
+    private String journeyDepartureTime;
+    private String arrivalAt;
+    private String journeyArrivalTime;
+    private Double speedometerStart;
+    private Double speedometerEnd;
+    private Double totalTraveled;
     private LocalTime receiptTime;
     private Double amount;
     private Double allowedAmount;
@@ -105,6 +119,102 @@ public class ClaimDetail {
 
     public void setEngineSizeCc(Double engineSizeCc) {
         this.engineSizeCc = engineSizeCc;
+    }
+
+    public String getJourneyDate() {
+        return journeyDate;
+    }
+
+    public void setJourneyDate(String journeyDate) {
+        this.journeyDate = journeyDate;
+    }
+
+    public String getJourneyReason() {
+        return journeyReason;
+    }
+
+    public void setJourneyReason(String journeyReason) {
+        this.journeyReason = journeyReason;
+    }
+
+    public Double getHomeToDestinationKm() {
+        return homeToDestinationKm;
+    }
+
+    public void setHomeToDestinationKm(Double homeToDestinationKm) {
+        this.homeToDestinationKm = homeToDestinationKm;
+    }
+
+    public Double getOfficeToDestinationKm() {
+        return officeToDestinationKm;
+    }
+
+    public void setOfficeToDestinationKm(Double officeToDestinationKm) {
+        this.officeToDestinationKm = officeToDestinationKm;
+    }
+
+    public Double getClaimableKm() {
+        return claimableKm;
+    }
+
+    public void setClaimableKm(Double claimableKm) {
+        this.claimableKm = claimableKm;
+    }
+
+    public String getDepartureFrom() {
+        return departureFrom;
+    }
+
+    public void setDepartureFrom(String departureFrom) {
+        this.departureFrom = departureFrom;
+    }
+
+    public String getJourneyDepartureTime() {
+        return journeyDepartureTime;
+    }
+
+    public void setJourneyDepartureTime(String journeyDepartureTime) {
+        this.journeyDepartureTime = journeyDepartureTime;
+    }
+
+    public String getArrivalAt() {
+        return arrivalAt;
+    }
+
+    public void setArrivalAt(String arrivalAt) {
+        this.arrivalAt = arrivalAt;
+    }
+
+    public String getJourneyArrivalTime() {
+        return journeyArrivalTime;
+    }
+
+    public void setJourneyArrivalTime(String journeyArrivalTime) {
+        this.journeyArrivalTime = journeyArrivalTime;
+    }
+
+    public Double getSpeedometerStart() {
+        return speedometerStart;
+    }
+
+    public void setSpeedometerStart(Double speedometerStart) {
+        this.speedometerStart = speedometerStart;
+    }
+
+    public Double getSpeedometerEnd() {
+        return speedometerEnd;
+    }
+
+    public void setSpeedometerEnd(Double speedometerEnd) {
+        this.speedometerEnd = speedometerEnd;
+    }
+
+    public Double getTotalTraveled() {
+        return totalTraveled;
+    }
+
+    public void setTotalTraveled(Double totalTraveled) {
+        this.totalTraveled = totalTraveled;
     }
 
     public LocalTime getReceiptTime() {

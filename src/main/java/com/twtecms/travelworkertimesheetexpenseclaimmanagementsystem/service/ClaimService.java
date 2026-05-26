@@ -27,6 +27,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ClaimService {
@@ -51,6 +52,11 @@ public class ClaimService {
 
     @Transactional
     public Claim saveClaim(Claim claim, MultipartFile[] files, String claimDetailsJson) {
+        return saveClaim(claim, files, claimDetailsJson, null);
+    }
+
+    @Transactional
+    public Claim saveClaim(Claim claim, MultipartFile[] files, String claimDetailsJson, String documentMetadataJson) {
         if (claim.getStatus() == null || claim.getStatus().isBlank() || "true".equalsIgnoreCase(claim.getStatus())) {
             claim.setStatus("Submitted");
         }
@@ -68,14 +74,14 @@ public class ClaimService {
         }
 
         Claim savedClaim = claimDao.save(claim);
-        saveClaimImages(savedClaim.getClaimId(), files);
+        saveClaimImages(savedClaim.getClaimId(), files, documentMetadataJson);
         saveClaimDetails(savedClaim.getClaimId(), claimDetailsJson, files);
         hydrateClaim(savedClaim);
         return savedClaim;
     }
 
     public List<Claim> getClaims() {
-        return claimDao.findAll()
+        return claimDao.findAllByOrderByDateCapturedDesc()
                 .stream()
                 .peek(this::hydrateClaim)
                 .toList();
@@ -177,12 +183,14 @@ public class ClaimService {
                 .orElseThrow(() -> new RuntimeException("Claim detail receipt not found with id: " + detailId));
     }
 
-    private void saveClaimImages(Long claimId, MultipartFile[] files) {
+    private void saveClaimImages(Long claimId, MultipartFile[] files, String documentMetadataJson) {
         if (files == null) {
             return;
         }
 
-        for (MultipartFile file : files) {
+        List<Map<String, String>> documentMetadata = readDocumentMetadata(documentMetadataJson);
+        for (int index = 0; index < files.length; index++) {
+            MultipartFile file = files[index];
             if (file == null || file.isEmpty()) {
                 continue;
             }
@@ -191,6 +199,7 @@ public class ClaimService {
             claimImage.setClaimId(claimId);
             claimImage.setFileName(file.getOriginalFilename());
             claimImage.setContentType(file.getContentType());
+            claimImage.setDocumentType(getDocumentType(documentMetadata, index, file.getOriginalFilename()));
             try {
                 claimImage.setData(file.getBytes());
             } catch (IOException e) {
@@ -198,6 +207,37 @@ public class ClaimService {
             }
             claimImageDao.save(claimImage);
         }
+    }
+
+    private List<Map<String, String>> readDocumentMetadata(String documentMetadataJson) {
+        if (documentMetadataJson == null || documentMetadataJson.isBlank()) {
+            return List.of();
+        }
+
+        try {
+            return objectMapper.readValue(documentMetadataJson, new TypeReference<List<Map<String, String>>>() {});
+        } catch (IOException e) {
+            throw new RuntimeException("Could not read claim document metadata", e);
+        }
+    }
+
+    private String getDocumentType(List<Map<String, String>> documentMetadata, int index, String fileName) {
+        if (documentMetadata == null || index >= documentMetadata.size()) {
+            return null;
+        }
+
+        Map<String, String> metadata = documentMetadata.get(index);
+        if (metadata == null) {
+            return null;
+        }
+
+        String metadataFileName = metadata.get("fileName");
+        if (metadataFileName != null && fileName != null && !metadataFileName.equals(fileName)) {
+            return null;
+        }
+
+        String documentType = metadata.get("documentType");
+        return documentType == null || documentType.isBlank() ? null : documentType;
     }
 
     private void saveClaimDetails(Long claimId, String claimDetailsJson, MultipartFile[] files) {

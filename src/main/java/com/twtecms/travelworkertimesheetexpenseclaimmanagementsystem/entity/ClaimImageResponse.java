@@ -5,12 +5,14 @@ public class ClaimImageResponse {
     private Long imageId;
     private String fileName;
     private String contentType;
+    private String documentType;
     private String imageUrl;
 
     public ClaimImageResponse(Long claimId, ClaimImage claimImage) {
         this.imageId = claimImage.getImageId();
         this.fileName = claimImage.getFileName();
         this.contentType = claimImage.getContentType();
+        this.documentType = claimImage.getDocumentType();
         this.imageUrl = "/claims/" + claimId + "/images/" + claimImage.getImageId();
     }
 
@@ -36,6 +38,14 @@ public class ClaimImageResponse {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
     }
 
     public String getImageUrl() {

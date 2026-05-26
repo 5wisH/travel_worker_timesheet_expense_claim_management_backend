@@ -48,7 +48,7 @@ public class WebSecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/authenticate", "/registerNewUser").permitAll()
+                        .requestMatchers("/authenticate", "/registerNewUser", "/error").permitAll()
                         .requestMatchers(
                                 PathPatternRequestMatcher.pathPattern("/claims"),
                                 PathPatternRequestMatcher.pathPattern("/claims/**")

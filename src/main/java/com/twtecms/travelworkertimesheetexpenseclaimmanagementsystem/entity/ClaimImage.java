@@ -24,6 +24,8 @@ public class ClaimImage {
 
     private String contentType;
 
+    private String documentType;
+
     @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(columnDefinition = "LONGBLOB")
@@ -59,6 +61,14 @@ public class ClaimImage {
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(String documentType) {
+        this.documentType = documentType;
     }
 
     public byte[] getData() {
