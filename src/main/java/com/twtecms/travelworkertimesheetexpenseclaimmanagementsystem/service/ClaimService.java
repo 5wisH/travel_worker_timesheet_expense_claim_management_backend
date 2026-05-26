@@ -1,6 +1,7 @@
 package com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.ClaimDetailDao;
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.config.Dao.ClaimDao;
@@ -16,6 +17,7 @@ import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.Paym
 import com.twtecms.travelworkertimesheetexpenseclaimmanagementsystem.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -47,6 +49,7 @@ public class ClaimService {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Transactional
     public Claim saveClaim(Claim claim, MultipartFile[] files, String claimDetailsJson) {
         if (claim.getStatus() == null || claim.getStatus().isBlank() || "true".equalsIgnoreCase(claim.getStatus())) {
             claim.setStatus("Submitted");
@@ -203,7 +206,7 @@ public class ClaimService {
         }
 
         try {
-            List<ClaimDetail> claimDetails = objectMapper.readValue(claimDetailsJson, new TypeReference<List<ClaimDetail>>() {});
+            List<ClaimDetail> claimDetails = readClaimDetails(claimDetailsJson);
             for (ClaimDetail detail : claimDetails) {
                 detail.setClaimId(claimId);
                 attachMatchingReceipt(detail, files);
@@ -213,6 +216,19 @@ public class ClaimService {
         } catch (IOException e) {
             throw new RuntimeException("Could not read claim details", e);
         }
+    }
+
+    private List<ClaimDetail> readClaimDetails(String claimDetailsJson) throws IOException {
+        JsonNode jsonNode = objectMapper.readTree(claimDetailsJson);
+        if (jsonNode == null || jsonNode.isNull()) {
+            return List.of();
+        }
+
+        if (jsonNode.isArray()) {
+            return objectMapper.convertValue(jsonNode, new TypeReference<List<ClaimDetail>>() {});
+        }
+
+        return List.of(objectMapper.convertValue(jsonNode, ClaimDetail.class));
     }
 
     private void attachMatchingReceipt(ClaimDetail detail, MultipartFile[] files) throws IOException {
